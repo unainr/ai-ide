@@ -26,7 +26,7 @@ export const SandProvider = ({ files, dependencies }: SandpackProject) => {
 					...DEPENDANCY,
 				},
 			}}>
-			<Tabs defaultValue="editor" className="h-screen flex flex-col">
+			<Tabs defaultValue="preview" className="h-screen flex flex-col">
 				<TabsList className="shrink-0">
 					<TabsTrigger value="editor">Code</TabsTrigger>
 					<TabsTrigger value="preview">Preview</TabsTrigger>

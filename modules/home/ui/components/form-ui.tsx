@@ -5,13 +5,7 @@ import { cn } from "@/lib/utils";
 import { ArrowUpIcon, Paperclip } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import {
-	SandpackProvider,
-	SandpackLayout,
-	SandpackPreview,
-	SandpackCodeEditor,
-} from "@codesandbox/sandpack-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { CreateSite } from "@/modules/project/server/create-site";
 import { Spinner } from "@/components/ui/spinner";
 import { Toaster } from "@/components/ui/sonner";
@@ -23,31 +17,35 @@ export const FormUI = () => {
 	const handleSubmit = async () => {
 		try {
 			setLoading(true);
-		   const newProject = await CreateSite({ prompt });
+			const newProject = await CreateSite({ prompt });
 
-      if (!newProject?.id) {
-        throw new Error("Failed to create project. No ID returned.");
-      }
+			if (!newProject?.id) {
+				throw new Error("Failed to create project. No ID returned.");
+			}
 
-      // Navigate to the project page immediately
-      router.push(`/project/${newProject.id}`);
+			// Navigate to the project page immediately
+			router.push(`/project/${newProject.id}`);
 		} catch (error: any) {
-			toast.error("Something went wrong while creating the project.");
+			toast.error("Something went wrong while creating the project.",error);
 		} finally {
 			setLoading(false);
 		}
 	};
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-		if (e.key === "Enter") {
+	const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+		if (e.key === "Enter" && !e.shiftKey) {
+			e.preventDefault();
 			handleSubmit();
-		}}
+			setPrompt('')
+		}
+	};
+
 	return (
 		<>
 			{/* Input Box Section */}
 			<div className="w-full max-w-3xl  mb-20">
 				<div className="relative bg-black/60 backdrop-blur-md rounded-xl border border-neutral-700">
 					<Textarea
-          onKeyDown={handleKeyDown}
+						onKeyDown={handleKeyDown}
 						value={prompt}
 						onChange={(e) => {
 							setPrompt(e.target.value);

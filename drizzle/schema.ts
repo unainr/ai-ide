@@ -8,3 +8,19 @@ export const siteTable = pgTable("project", {
 	created_at: timestamp("created_at").notNull().defaultNow(),
 	updated_at: timestamp("updated_at").notNull().defaultNow(),
 });
+
+export const messageTable = pgTable("messages", {
+  id: uuid("id").primaryKey().defaultRandom(),
+
+  siteId: uuid("site_id")
+    .notNull()
+    .references(() => siteTable.id, { onDelete: "cascade" }),
+
+  role: varchar("role", { length: 20 })
+    .$type<"user" | "assistant">()
+    .notNull(),
+
+  content: text("content").notNull(),
+
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});

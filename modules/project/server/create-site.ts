@@ -65,7 +65,16 @@ export const getID = async (id: string) => {
 			.where(eq(siteTable.id, id));
 		return result[0];
 	} catch (error) {
-		console.log(error)
+		console.log(error);
 		// throw new Error("Project Id not found");
+	}
+};
+
+export const getAllSite = async () => {
+	try {
+		const result = await db.select().from(siteTable);
+		return result;
+	} catch (error) {
+		console.log(error);
 	}
 };

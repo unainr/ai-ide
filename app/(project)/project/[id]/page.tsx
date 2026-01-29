@@ -1,5 +1,6 @@
 import { getID } from "@/modules/project/server/create-site";
 import Conversation from "@/modules/project/ui/components/chat-interface";
+import AIChatCard from "@/modules/project/ui/components/chat-interface";
 import WorkingChatbot from "@/modules/project/ui/components/chat-interface";
 import ChatInterface from "@/modules/project/ui/components/chat-interface";
 import { ProjectContent } from "@/modules/project/ui/components/project-content";
@@ -30,7 +31,7 @@ const ProjectPage = async ({ params }: Props) => {
 	// const response: SandpackProject = row.code as SandpackProject;
 	return (
 		<div className="grid h-screen grid-cols-2 gap-4 ">
-			<WorkingChatbot />
+			<AIChatCard siteId={id} />
 			<ProjectContent id={id} initialData={rows} />
 			{/* <SandProvider
 				files={response.files}

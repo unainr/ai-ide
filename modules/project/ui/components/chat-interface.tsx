@@ -1,228 +1,148 @@
 "use client";
 
-import { Bot, Copy, CornerRightUp, Sparkles } from "lucide-react";
-import { useCallback, useMemo, useRef, useState } from "react";
-import { Textarea } from "@/components/ui/textarea";
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Send } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAutoResizeTextarea } from "@/hooks/use-auto-resize-textarea";
-import { useChat } from "@ai-sdk/react";
-import Markdown from "react-markdown";
-import { toast } from "sonner";
-import { DefaultChatTransport } from "ai";
+import { chatAction } from "../../server/chat.action";
 
-function AiInput({
-	value,
-	onChange,
-	onSubmit,
-	onKeyDown,
-}: {
-	value: string;
-	onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-	onSubmit: () => void;
-	onKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
-}) {
-	const { textareaRef, adjustHeight } = useAutoResizeTextarea({
-		minHeight: 50,
-		maxHeight: 200,
-	});
+export default function AIChatCard({ className,siteId }: { className?: string,siteId:string }) {
+  const [messages, setMessages] = useState<{ sender: "ai" | "user"; text: string }[]>([]);
+  const [input, setInput] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
 
-	return (
-		<div className="w-full">
-			<div className="relative mx-auto flex w-full max-w-4xl flex-col items-start gap-2">
-				<div className="relative mx-auto w-full max-w-4xl">
-					<Textarea
-						ref={textareaRef}
-						id="ai-input-06"
-						placeholder="Ask me anything!"
-						className={cn(
-							"bg-muted/50 text-foreground ring-primary/20 placeholder:text-muted-foreground/70 w-full max-w-4xl resize-none rounded-3xl border-none py-4 pr-12 pl-6 leading-[1.2] text-wrap",
-							"focus:ring-primary/30 min-h-14 transition-all duration-200 focus:ring-2",
-						)}
-						value={value}
-						onKeyDown={onKeyDown}
-						onChange={(e) => {
-							onChange(e);
-							adjustHeight();
-						}}
-					/>
-					<button
-						onClick={onSubmit}
-						className={cn(
-							"bg-primary/10 hover:bg-primary/20 absolute top-1/2 right-3 -translate-y-1/2 rounded-xl p-2 transition-all duration-200",
-							value.trim() ? "opacity-100" : "cursor-not-allowed opacity-50",
-						)}
-						type="button"
-						disabled={!value.trim()}>
-						<CornerRightUp
-							className={cn(
-								"text-primary h-4 w-4 transition-opacity",
-								value ? "opacity-100" : "opacity-50",
-							)}
-						/>
-					</button>
-				</div>
-				<p className="text-muted-foreground ml-4 text-xs">
-					{value.length}/2000 characters
-				</p>
-			</div>
-		</div>
-	);
-}
+const handleSend = async () => {
+  if (!input.trim()) return;
 
-export default function WorkingChatbot() {
-	const [responseTimes, setResponseTimes] = useState<Record<string, number>>(
-		{},
-	);
-	const [input, setInput] = useState("");
-	const startTimeRef = useRef<number>(0);
-	// Using theme for styling is handled by Tailwind's dark mode classes
+  // 1. Add user message
+  const userMessage: { sender: "ai" | "user"; text: string } = { sender: "user", text: input };
+  const updatedMessages = [...messages, userMessage];
+  setMessages(updatedMessages);
+  setInput("");
+  setIsTyping(true);
 
-	const transport = useMemo(
-		() =>
-			new DefaultChatTransport({
-				api: "/api/chat",
-			}),
-		[],
-	);
+  try {
+    // 2. Call server action
+    const aiText = await chatAction(
+		siteId,
+      updatedMessages.map((msg) => ({
+        role: msg.sender === "ai" ? "assistant" : "user", // map "ai" -> "assistant"
+        content: msg.text,
+      }))
+    );
 
-	const { messages, status, error, sendMessage } = useChat({
-		transport,
-		onFinish: ({ message }) => {
-			const duration = (Date.now() - startTimeRef.current) / 1000;
-			setResponseTimes((prev) => ({ ...prev, [message.id]: duration }));
-		},
-	});
+    // 3. Add AI message
+    const aiMessage: { sender: "ai"; text: string|any } = { sender: "ai", text: aiText };
+    setMessages((prev) => [...prev, aiMessage]);
+	 // 4. Trigger Sandpack loader for update
+   window.dispatchEvent(new CustomEvent("site-updating"));
 
-	// Check if the AI is currently generating a response
-	const isLoading = status === "submitted" || status === "streaming";
+  } catch (error) {
+    console.error(error);
+    setMessages((prev) => [
+      ...prev,
+      { sender: "ai", text: "⚠️ Something went wrong. Please try again." },
+    ]);
+  } finally {
+    setIsTyping(false);
+  }
+};
 
-	const handleSubmit = useCallback(
-		(e?: React.FormEvent) => {
-			e?.preventDefault();
-			if (!input.trim()) return;
-			startTimeRef.current = Date.now();
-			sendMessage({ parts: [{ type: "text", text: input.trim() }] });
-			setInput("");
-		},
-		[input, sendMessage, setInput],
-	);
+  return (
+    <div className={cn("relative w-full rounded-2xl overflow-hidden p-0.5", className)}>
+      {/* Animated Outer Border */}
+      <motion.div
+        className="absolute inset-0 rounded-2xl border-2 border-white/20"
+        animate={{ rotate: [0, 360] }}
+        transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+      />
 
-	const handleKeyDown = useCallback(
-		(event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-			if (event.key === "Enter" && !event.shiftKey) {
-				event.preventDefault();
-				handleSubmit();
-			}
-		},
-		[handleSubmit],
-	);
+      {/* Inner Card */}
+      <div className="relative flex flex-col w-full h-full rounded-xl border border-white/10 overflow-hidden bg-black/90 backdrop-blur-xl">
+        {/* Inner Animated Background */}
+        <motion.div
+          className="absolute inset-0 bg-linear-to-br from-gray-800 via-black to-gray-900"
+          animate={{ backgroundPosition: ["0% 0%", "100% 100%", "0% 0%"] }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          style={{ backgroundSize: "200% 200%" }}
+        />
 
-	return (
-		<div className="mx-auto flex h-svh w-full max-w-4xl flex-col pb-0.5">
-			<div className="border-primary/20 bg-card/40 text-card-foreground h-full flex-1 overflow-y-auto rounded-xl border p-4 text-sm leading-6 shadow-md sm:text-base sm:leading-7">
-				{messages.length > 0 ? (
-					messages.map((m) => {
-						return (
-							<div key={m.id} className="mb-4 whitespace-pre-wrap">
-								{m.role === "user" ? (
-									<div className="flex flex-row px-2 py-4 sm:px-4">
-										<img
-											alt="user"
-											className="mr-2 flex size-6 rounded-full sm:mr-4 md:size-8"
-											src="https://i.postimg.cc/j5dW4vFd/Mvpblocks.webp"
-											width={32}
-											height={32}
-										/>
-										<div className="flex max-w-3xl items-center">
-											<p>
-												{m.parts.map((part) =>
-													part.type === "text" ? part.text : null,
-												)}
-											</p>
-										</div>
-									</div>
-								) : (
-									<div className="relative mb-4 flex rounded-xl bg-neutral-50 px-2 py-6 sm:px-4 dark:bg-neutral-900">
-										<Bot className="bg-secondary text-primary mr-2 flex size-8 rounded-full p-1 sm:mr-4" />{" "}
-										<div className="markdown-body w-full max-w-3xl overflow-x-auto rounded-xl">
-											<Markdown>
-												{m.parts
-													.map((part) =>
-														part.type === "text" ? part.text : "",
-													)
-													.join("")}
-											</Markdown>
-											{responseTimes[m.id] && (
-												<div className="mt-2 text-xs text-neutral-500">
-													Response time: {responseTimes[m.id].toFixed(3)}s
-												</div>
-											)}
-										</div>
-										<button
-											type="button"
-											title="copy"
-											className="absolute top-2 right-2 rounded-full bg-rose-500 p-1 opacity-50 transition-all hover:opacity-75 active:scale-95 dark:bg-neutral-800"
-											onClick={() => {
-												const textContent = m.parts
-													.filter((part) => part.type === "text")
-													.join("");
-												navigator.clipboard.writeText(textContent);
-												toast.success("Copied to clipboard");
-											}}>
-											<Copy className="h-4 w-4 text-white" />
-										</button>
-									</div>
-								)}
-							</div>
-						);
-					})
-				) : (
-					<div className="flex h-full flex-col items-center justify-center">
-						<p className="text-muted-foreground mx-auto px-2 text-center text-xl font-semibold tracking-wide md:text-2xl">
-							Start Chatting with
-							<br />
-							<span className="text-primary text-2xl font-bold md:text-4xl">
-								MVPBlocks
-							</span>
-							<span className="text-primary">.AI</span>
-						</p>
-						<div className="group relative mt-6">
-							<div className="from-primary/30 to-primary/10 absolute -inset-1 rounded-full bg-linear-to-r opacity-75 blur-md transition-opacity duration-500 group-hover:opacity-100"></div>
-							<img
-								src="https://blocks.mvp-subha.me/assets/robo.svg"
-								alt="AI Assistant"
-								width={250}
-								height={250}
-								className="relative transition-all duration-500 hover:scale-105 active:scale-95"
-							/>
-						</div>
-					</div>
-				)}
-				{isLoading && (
-					<div className="bg-primary/5 mx-auto flex w-fit items-center gap-2 rounded-full px-4 py-2">
-						<Sparkles className="text-primary h-4 w-4 animate-pulse" />
-						<span className="from-primary/80 to-primary animate-pulse bg-linear-to-r bg-clip-text text-sm font-medium text-transparent">
-							Generating response...
-						</span>
-					</div>
-				)}
-				{error && (
-					<div className="border-destructive/20 bg-destructive/10 text-destructive mx-auto w-fit rounded-lg border p-3">
-						Something went wrong! Please try again.
-					</div>
-				)}
-			</div>
+        {/* Floating Particles */}
+        {Array.from({ length: 20 }).map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 rounded-full bg-white/10"
+            animate={{
+              y: ["0%", "-140%"],
+              x: [Math.random() * 200 - 100, Math.random() * 200 - 100],
+              opacity: [0, 1, 0],
+            }}
+            transition={{
+              duration: 5 + Math.random() * 3,
+              repeat: Infinity,
+              delay: i * 0.5,
+              ease: "easeInOut",
+            }}
+            style={{ left: `${Math.random() * 100}%`, bottom: "-10%" }}
+          />
+        ))}
 
-			<form className="mt-2" onSubmit={handleSubmit}>
-				<div className="relative">
-					<AiInput
-						value={input}
-						onChange={(e) => setInput(e.target.value)}
-						onSubmit={handleSubmit}
-						onKeyDown={handleKeyDown}
-					/>
-				</div>
-			</form>
-		</div>
-	);
+        {/* Header */}
+        <div className="px-4 py-3 border-b border-white/10 relative z-10">
+          <h2 className="text-lg font-semibold text-white">🤖 AI Assistant</h2>
+        </div>
+
+        {/* Messages */}
+        <div className="flex-1 px-4 py-3 overflow-y-auto space-y-3 text-sm flex flex-col relative z-10">
+          {messages.map((msg, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className={cn(
+                "px-3 py-2 rounded-xl max-w-[80%] shadow-md backdrop-blur-md",
+                msg.sender === "ai"
+                  ? "bg-white/10 text-white self-start"
+                  : "bg-white/30 text-black font-semibold self-end"
+              )}
+            >
+              {msg.text}
+            </motion.div>
+          ))}
+
+          {/* AI Typing Indicator */}
+          {isTyping && (
+            <motion.div
+              className="flex items-center gap-1 px-3 py-2 rounded-xl max-w-[30%] bg-white/10 self-start"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0, 1, 0.6, 1] }}
+              transition={{ repeat: Infinity, duration: 1.2 }}
+            >
+              <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+              <span className="w-2 h-2 rounded-full bg-white animate-pulse delay-200"></span>
+              <span className="w-2 h-2 rounded-full bg-white animate-pulse delay-400"></span>
+            </motion.div>
+          )}
+        </div>
+
+        {/* Input */}
+        <div className="flex items-center gap-2 p-3 border-t border-white/10 relative z-10">
+          <input
+            className="flex-1 px-3 py-2 text-sm bg-black/50 rounded-lg border border-white/10 text-white focus:outline-none focus:ring-1 focus:ring-white/50"
+            placeholder="Type a message..."
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSend()}
+          />
+          <button
+            onClick={handleSend}
+            className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+          >
+            <Send className="w-4 h-4 text-white" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }

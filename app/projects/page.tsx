@@ -10,3 +10,4 @@ const ProjectsPage = () => {
 };
 
 export default ProjectsPage;
+export const revalidate = 0;

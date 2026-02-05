@@ -12,15 +12,24 @@ interface Props {
 	initialData: any;
 }
 
-export function ProjectContent({ id, initialData }: Props) {
+	export function ProjectContent({ id, initialData }: Props) {
 	const [project, setProject] = useState(initialData);
 
 	const isReady =
 		project?.code?.files && Object.keys(project.code.files).length > 0;
 
-	// Auto-poll database until ready
+	// Listen for chat updates
 	useEffect(() => {
-		if (isReady) return; // Already ready, stop
+		const handleSiteUpdating = () => {
+			setProject((prev: any) => ({ ...prev, isUpdating: true }));
+		};
+		window.addEventListener("site-updating", handleSiteUpdating);
+		return () => window.removeEventListener("site-updating", handleSiteUpdating);
+	}, []);
+
+	// Auto-poll database until ready or when updating
+	useEffect(() => {
+		if (isReady && !project?.isUpdating) return; // Stop if ready AND not updating
 
 		const poll = setInterval(async () => {
 			try {
@@ -32,10 +41,10 @@ export function ProjectContent({ id, initialData }: Props) {
 		}, 3000); // Check every 3 seconds
 
 		return () => clearInterval(poll);
-	}, [id, isReady]);
+	}, [id, isReady, project?.isUpdating]);
 
 	// Loading state
-	if (!isReady) {
+	if (!isReady || project?.isUpdating) {
 		return (
 			<div className="h-screen flex flex-col bg-background">
 				<Tabs defaultValue="editor" className="h-screen flex flex-col">
@@ -120,6 +129,7 @@ export function ProjectContent({ id, initialData }: Props) {
 			<SandProvider
 				files={sandpack.files}
 				dependencies={sandpack.dependencies}
+				siteId={id}
 			/>
 		</div>
 	);

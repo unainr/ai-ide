@@ -27,6 +27,13 @@ export const generateSiteCode = inngest.createFunction(
   { 
     id: "generate-site-code",
     retries: 2,
+    onFailure: async ({ event }) => {
+      const { siteId } = event.data.event.data;
+      await db
+        .update(siteTable)
+        .set({ isUpdating: false })
+        .where(eq(siteTable.id, siteId));
+    },
   },
   { event: "site/generate.code" },
   async ({ event, step }) => {
@@ -35,7 +42,7 @@ export const generateSiteCode = inngest.createFunction(
     const code = await step.run("generate-ai-code", async () => {
       const { object } = await generateObject({
         system: SystemPrompt,
-        model: openrouter.chat('openai/gpt-oss-120b:free'),
+        model: groq('openai/gpt-oss-120b'),
         prompt: prompt,
         maxOutputTokens: 8000,
         schema:SiteSchema
@@ -59,7 +66,23 @@ export const generateSiteCode = inngest.createFunction(
 // TODO: update site 
 
 export const updateSiteFromChat = inngest.createFunction(
-  { id: "update-site-from-chat", retries: 2 },
+  { 
+    id: "update-site-from-chat", 
+    retries: 2,
+    onFailure: async ({ event }) => {
+      const { siteId } = event.data.event.data;
+      await db
+        .update(siteTable)
+        .set({ isUpdating: false })
+        .where(eq(siteTable.id, siteId));
+
+        await db.insert(messageTable).values({
+            siteId,
+            role: "assistant",
+            content: "Failed to update code. Please try again.",
+          });
+    },
+  },
   { event: "site/update.from.chat" },
   async ({ event, step }) => {
     const { siteId, message } = event.data;
@@ -105,7 +128,7 @@ Rules:
     // 4️⃣ GENERATE UPDATED CODE
     const updatedCode = await step.run("generate-updated-code", async () => {
       const { object } = await generateObject({
-        model: openrouter.chat("openai/gpt-oss-120b:free"),
+        model: groq('openai/gpt-oss-120b'),
         system: SystemPrompt,
         prompt,
         schema: SiteSchema,
@@ -119,6 +142,7 @@ Rules:
     await db
       .update(siteTable)
       .set({
+         isUpdating: false, // 👈 IMPORTANT
         code: updatedCode,
         updated_at: new Date(),
       })

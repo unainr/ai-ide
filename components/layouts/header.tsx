@@ -25,71 +25,54 @@ export default function MainHeader() {
 		return () => window.removeEventListener("scroll", handleScroll);
 	}, []);
 
+  const navLinks = [
+    { href: "/", label: "Home" },
+    { href: "/projects", label: "Projects" },
+    { href: "/pricing", label: "Pricing" },
+  ];
+
 	return (
 		<header
-			className={`fixed top-0 z-50 w-full transition-all duration-200 ${
-				isScrolled ? "bg-background/60 backdrop-blur-md" : ""
-			}`}>
+			className={cn(
+        "fixed top-0 z-50 w-full transition-all duration-300 border-b border-transparent",
+				isScrolled ? "bg-black/80 backdrop-blur-xl border-white/5 shadow-2xl" : "bg-transparent"
+			)}>
 			<div className="mx-auto max-w-7xl flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
-				<Logo />
+				<div className="flex items-center gap-2">
+           <Logo />
+        </div>
 
-				<nav className="hidden  md:flex items-center gap-4 lg:gap-6">
-					<Link
-						href="/"
-						className={cn(
-							"text-sm font-medium transition-colors ",
-							isActive("/") &&
-								"text-[#a288f9] hover:text-[#845fff] transition-all duration-100 ease-in font-semibold underline underline-offset-4"
-						)}>
-						Home
-					</Link>
-
-					<Link
-						href="/create-companion"
-						className={cn(
-							"text-sm font-medium transition-colors ",
-							isActive("/create-companion") &&
-								"text-[#a288f9] hover:text-[#845fff] transition-all duration-100 ease-in font-semibold underline underline-offset-4"
-						)}>
-						Create Companion
-					</Link>
-					<Link
-						href="/learning-ai"
-						className={cn(
-							"text-sm font-medium transition-colors ",
-							isActive("/learning-ai") &&
-								"text-[#a288f9] hover:text-[#845fff] transition-all duration-100 ease-in font-semibold underline underline-offset-4"
-						)}>
-						Learning
-					</Link>
-					<Link
-						href="/journey"
-						className={cn(
-							"text-sm font-medium transition-colors ",
-							isActive("/journey") &&
-								"text-[#a288f9] hover:text-[#845fff] transition-all duration-100 ease-in font-semibold underline underline-offset-4"
-						)}>
-						My Journey
-					</Link>
-					<Link
-						href="/pricing"
-						className={cn(
-							"text-sm font-medium transition-colors ",
-							isActive("/pricing") &&
-								"text-[#a288f9] hover:text-[#845fff] transition-all duration-100 ease-in font-semibold underline underline-offset-4"
-						)}>
-						Pricing
-					</Link>
+				<nav className="hidden md:flex items-center gap-1 bg-white/5 backdrop-blur-md px-2 py-1.5 rounded-full border border-white/10 shadow-inner">
+          {navLinks.map((link) => (
+            <Link
+              key={link.label}
+              href={link.href}
+              className={cn(
+                "px-4 py-1.5 text-sm font-medium transition-all duration-300 rounded-full relative",
+                isActive(link.href) 
+                  ? "text-white bg-white/10 shadow-[0_0_10px_rgba(255,255,255,0.1)]" 
+                  : "text-gray-400 hover:text-white hover:bg-white/5"
+              )}>
+              {link.label}
+              {isActive(link.href) && (
+                <span className="absolute inset-x-0 -bottom-px mx-auto h-px w-1/2 bg-gradient-to-r from-transparent via-primary to-transparent opacity-50" />
+              )}
+            </Link>
+          ))}
 				</nav>
 
-				<div className="hidden md:flex items-center gap-2">
+				<div className="hidden md:flex items-center gap-3">
 					<SignedIn>
-						<UserButton />
+						<UserButton appearance={{
+              elements: {
+                avatarBox: "h-9 w-9 ring-2 ring-white/10 hover:ring-white/30 transition-all duration-300"
+              }
+            }} />
 					</SignedIn>
 					<SignedOut>
 						<Button
 							asChild
-							className="rounded-lg bg-[#845fff] hover:bg-[#845fff]/90  text-white">
+							className="rounded-full bg-white text-black hover:bg-gray-200 transition-all duration-300 font-semibold shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_25px_rgba(255,255,255,0.3)]">
 							<Link href="/sign-in">Get Started</Link>
 						</Button>
 					</SignedOut>
@@ -98,61 +81,44 @@ export default function MainHeader() {
 				</div>
 
 				{/* Mobile Menu Trigger */}
-				<div className="md:hidden flex items-center">
+				<div className="md:hidden flex items-center gap-4">
+          <ModeToggle />
 					<Sheet>
 						<SheetTrigger asChild>
-							<Button variant="ghost" size="icon">
+							<Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
 								<Menu className="h-6 w-6" />
 							</Button>
 						</SheetTrigger>
-						<SheetContent side="right" className="w-62.5 sm:w-75">
-							<nav className="flex flex-col gap-4 mt-8 items-center">
-								<Link
-									href="/"
-									className={cn(
-										"text-sm font-medium transition-colors ",
-										isActive("/") &&
-											"text-[#a288f9] hover:text-[#845fff] transition-all duration-100 ease-in font-semibold underline underline-offset-4"
-									)}>
-									Home
-								</Link>
-								<Link
-									href="/learning-ai"
-									className={cn(
-										"text-sm font-medium transition-colors ",
-										isActive("/learning-ai") &&
-											"text-[#a288f9] hover:text-[#845fff] transition-all duration-100 ease-in font-semibold underline underline-offset-4"
-									)}>
-									Learning
-								</Link>
-								<Link
-									href="/journey"
-									className={cn(
-										"text-sm font-medium transition-colors ",
-										isActive("/journey") &&
-											"text-[#a288f9] hover:text-[#845fff] transition-all duration-100 ease-in font-semibold underline underline-offset-4"
-									)}>
-									My Journey
-								</Link>
-								<Link
-									href="/pricing"
-									className={cn(
-										"text-sm font-medium transition-colors ",
-										isActive("/pricing") &&
-											"text-[#a288f9] hover:text-[#845fff] transition-all duration-100 ease-in font-semibold underline underline-offset-4"
-									)}>
-									Pricing
-								</Link>
-								<SignedIn>
-									<UserButton />
-								</SignedIn>
-								<SignedOut>
-									<Button
-										asChild
-										className="rounded-lg bg-[#845fff] hover:bg-[#845fff]/90  text-white">
-										<Link href="/sign-in">Get Started</Link>
-									</Button>
-								</SignedOut>
+						<SheetContent side="right" className="w-[300px] border-l border-white/10 bg-black/95 backdrop-blur-xl">
+							<nav className="flex flex-col gap-2 mt-8">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.label}
+                    href={link.href}
+                    className={cn(
+                      "px-4 py-3 text-lg font-medium transition-all duration-200 rounded-xl",
+                      isActive(link.href)
+                        ? "text-white bg-white/10 border border-white/5"
+                        : "text-gray-400 hover:text-white hover:bg-white/5"
+                    )}>
+                    {link.label}
+                  </Link>
+                ))}
+								<div className="mt-6 flex flex-col gap-4">
+                  <SignedIn>
+									  <div className="flex items-center gap-3 px-4 py-3 bg-white/5 rounded-xl">
+                      <UserButton />
+                      <span className="text-sm text-gray-300">My Account</span>
+                    </div>
+								  </SignedIn>
+                  <SignedOut>
+                    <Button
+                      asChild
+                      className="w-full rounded-xl bg-white text-black hover:bg-gray-200 py-6 text-lg">
+                      <Link href="/sign-in">Get Started</Link>
+                    </Button>
+                  </SignedOut>
+                </div>
 							</nav>
 						</SheetContent>
 					</Sheet>

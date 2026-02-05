@@ -32,7 +32,7 @@ const ProjectPage = async ({ params }: Props) => {
 	return (
 		<div className="grid h-screen grid-cols-2 gap-4 ">
 			<AIChatCard siteId={id} />
-			<ProjectContent id={id} initialData={rows} />
+			<ProjectContent id={id} initialData={rows}  />
 			{/* <SandProvider
 				files={response.files}
 				dependencies={response.dependencies}

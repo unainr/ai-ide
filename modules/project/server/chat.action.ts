@@ -3,11 +3,20 @@
 import { generateText } from 'ai';
 import { groq } from '@ai-sdk/groq';
 import { inngest } from '@/inngest/client';
+import { db } from '@/drizzle/db';
+import { siteTable } from '@/drizzle/schema';
+import { eq } from 'drizzle-orm';
 
 export async function chatAction(
   siteId: string, // NEW: site ID to update
   messages: { role: 'user' | 'assistant'; content: string }[]
 ) {
+
+   // 🔥 THIS LINE WAS MISSING (MOST IMPORTANT LINE)
+  await db
+    .update(siteTable)
+    .set({ isUpdating: true })
+    .where(eq(siteTable.id, siteId));
   // 1️⃣ Generate AI response
   const { text } = await generateText({
     model: groq('openai/gpt-oss-120b'),

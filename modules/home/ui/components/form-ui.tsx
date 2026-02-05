@@ -75,6 +75,22 @@ export const FormUI = () => {
 						</div>
 					</div>
 				</div>
+
+				<div className="flex flex-wrap justify-center gap-2 mt-4">
+					{[
+						"Landing page for a coffee shop",
+						"Personal portfolio with dark mode",
+						"E-commerce dashboard with charts",
+						"Blog website with grid layout",
+					].map((suggestion) => (
+						<button
+							key={suggestion}
+							onClick={() => setPrompt(suggestion)}
+							className="px-3 py-1.5 text-xs text-neutral-400 bg-white/5 border border-white/5 rounded-full hover:bg-white/10 hover:text-white transition-all duration-300">
+							{suggestion}
+						</button>
+					))}
+				</div>
 			</div>
 		</>
 	);

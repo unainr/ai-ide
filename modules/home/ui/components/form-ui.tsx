@@ -3,18 +3,22 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { ArrowUpIcon, Paperclip } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { CreateSite } from "@/modules/project/server/create-site";
 import { Spinner } from "@/components/ui/spinner";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
-export const FormUI = () => {
+export const FormUI = ({userId}:{userId:string}) => {
 	const router = useRouter();
 	const [loading, setLoading] = useState(false);
 	const [prompt, setPrompt] = useState("");
 	const handleSubmit = async () => {
+	if (!userId) {
+		router.push('/sign-in');
+		return; // Important: stop execution
+	}
 		try {
 			setLoading(true);
 			const newProject = await CreateSite({ prompt });
@@ -32,6 +36,10 @@ export const FormUI = () => {
 		}
 	};
 	const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+		if (!userId) {
+		router.push('/sign-in');
+		return; // Important: stop execution
+	}
 		if (e.key === "Enter" && !e.shiftKey) {
 			e.preventDefault();
 			handleSubmit();

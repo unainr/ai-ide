@@ -55,7 +55,7 @@ export default function MainHeader() {
               )}>
               {link.label}
               {isActive(link.href) && (
-                <span className="absolute inset-x-0 -bottom-px mx-auto h-px w-1/2 bg-gradient-to-r from-transparent via-primary to-transparent opacity-50" />
+                <span className="absolute inset-x-0 -bottom-px mx-auto h-px w-1/2 bg-linear-to-r from-transparent via-primary to-transparent opacity-50" />
               )}
             </Link>
           ))}
@@ -89,7 +89,7 @@ export default function MainHeader() {
 								<Menu className="h-6 w-6" />
 							</Button>
 						</SheetTrigger>
-						<SheetContent side="right" className="w-[300px] border-l border-white/10 bg-black/95 backdrop-blur-xl">
+						<SheetContent side="right" className="w-75 border-l border-white/10 bg-black/95 backdrop-blur-xl">
 							<nav className="flex flex-col gap-2 mt-8">
                 {navLinks.map((link) => (
                   <Link

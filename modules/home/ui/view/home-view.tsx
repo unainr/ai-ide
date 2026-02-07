@@ -1,7 +1,10 @@
 import { ALLSiteShow } from "@/modules/project/ui/components/all-site-show";
 import { FormUI } from "../components/form-ui";
+import { auth } from "@clerk/nextjs/server";
 
-export const HomeView = () => {
+export const HomeView = async () => {
+	const {userId} = await auth()
+	
 	return (
 		<>
 			<div
@@ -23,7 +26,7 @@ export const HomeView = () => {
 					</div>
 				</div>
 
-				<FormUI />
+				<FormUI userId={userId!} />
 			</div>
       <ALLSiteShow/>
 		</>

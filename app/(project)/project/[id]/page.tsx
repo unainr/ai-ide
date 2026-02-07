@@ -4,11 +4,15 @@ import AIChatCard from "@/modules/project/ui/components/chat-interface";
 import WorkingChatbot from "@/modules/project/ui/components/chat-interface";
 import ChatInterface from "@/modules/project/ui/components/chat-interface";
 import { ProjectContent } from "@/modules/project/ui/components/project-content";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 
 interface Props {
 	params: Promise<{ id: string }>;
 }
 const ProjectPage = async ({ params }: Props) => {
+	const {userId} = await auth()
+	if(!userId) redirect("/sign-in");
 	const { id } = await params;
 	const rows = await getID(id);
 	if (!rows) {
